@@ -1,0 +1,32 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "GOOGLE_MAPS_API_KEY",
+      "description": "Google Maps API key for photorealistic 3D tiles + place search (client-exposed; restrict by HTTP referrer). Optional — app boots keyless on Esri imagery. Get it from Google Cloud Console.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "CESIUM_ION_TOKEN",
+      "description": "Cesium ion access token for ion-hosted Google 3D tiles / terrain (client-exposed; use a public assets:read token). Optional. Get it from cesium.com/ion.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "description": "OpenAI API key for realtime voice control. Optional. Get it from platform.openai.com.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "AISSTREAM_API_KEY",
+      "description": "AISStream key for the live AIS vessels layer (server-side only). Optional. Get it from aisstream.io.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "FIRMS_MAP_KEY",
+      "description": "NASA FIRMS map key for live active fires (server-side only). Optional. Get it from firms.modaps.eosdis.nasa.gov/api/map_key/.",
+      "requiredAtBoot": false
+    }
+  ]
+}

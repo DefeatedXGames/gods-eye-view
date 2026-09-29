@@ -1,0 +1,38 @@
+# Base44 development environment for God's Eye View.
+# Runs the Vite dev server (which also brokers the API providers as middleware)
+# from the cloned source with live reload. All provider API keys are optional —
+# the app boots keyless on Esri World Imagery.
+services:
+  web:
+    image: node:24
+    working_dir: /app
+    volumes:
+      - .:/app
+    # Install locked dependencies, then start the live-reload dev server.
+    # PUPPETEER_SKIP_DOWNLOAD avoids pulling Chromium (only QA scripts use it).
+    command: ["sh", "-ec", "npm ci && exec npm run dev"]
+    environment:
+      # Single origin: the Vite dev server serves the browser app AND the /api
+      # provider proxies, all on host port 3000.
+      - PORT=3000
+      # Bind all interfaces so the preview proxy can reach the dev server, and
+      # so Vite's allowedHosts resolves to `true` (accepts the rotating sandbox host).
+      - HOST=0.0.0.0
+      # The dev server normally sends X-Frame-Options: DENY / frame-ancestors 'none'
+      # to protect the Provider Settings panel. That blocks the preview iframe, so
+      # opt out of framing protection here (keys are still server-side / unset).
+      - GEV_ALLOW_FRAMING=true
+      # Skip the heavy Chromium download; puppeteer is a devDependency for QA only.
+      - PUPPETEER_SKIP_DOWNLOAD=true
+      # Vite >= 6.1 appends this to its allowed hosts (platform-provided).
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+    ports:
+      - "3000:3000"
+    restart: on-failure
+    healthcheck:
+      # Node 24 has global fetch; confirm the dev server answers the entry point.
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      start_period: 180s
+      retries: 6

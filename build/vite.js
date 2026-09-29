@@ -39,10 +39,16 @@ export function createBrowserViteConfig({
         deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/ENVIRONMENT'],
       },
       // These headers protect the document containing Provider Settings.
-      headers: {
-        'X-Frame-Options': 'DENY',
-        'Content-Security-Policy': "frame-ancestors 'none'",
-      },
+      // GEV_ALLOW_FRAMING opts them out for embedded previews (e.g. Base44);
+      // default behavior remains to deny framing.
+      ...(process.env.GEV_ALLOW_FRAMING
+        ? {}
+        : {
+            headers: {
+              'X-Frame-Options': 'DENY',
+              'Content-Security-Policy': "frame-ancestors 'none'",
+            },
+          }),
     },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
