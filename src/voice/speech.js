@@ -479,6 +479,14 @@ export function planStepLabel(name, args = {}) {
       return 'Check view state';
     case 'frame_overhead':
       return `Frame ${spokenLabel(args.target || 'flights', 24)}`;
+    case 'resolve_area':
+      return args.around
+        ? `Area around ${displayName(args.query || 'landmark', 32)}`
+        : `${args.draw ? 'Outline' : 'Find'} ${displayName(args.query || 'area', 36)}`;
+    case 'find_imagery':
+      return 'Find recent imagery';
+    case 'osm_query':
+      return `Find ${spokenLabel(args.what || 'places', 32)}`;
     default:
       return spokenLabel(String(name || 'Action').replace(/_/g, ' '), 40);
   }
@@ -496,6 +504,12 @@ export function narrationLabel(name, args = {}) {
       return displayName(args.query || args.locationId || '', 32);
     case 'select_nearest_aircraft':
       return displayName(args.locationQuery || args.locationId || '', 32);
+    case 'resolve_area':
+      return displayName(args.query || '', 32);
+    case 'find_imagery':
+      return 'the imagery';
+    case 'osm_query':
+      return spokenLabel(args.what || '', 32);
     default:
       return '';
   }
@@ -510,6 +524,10 @@ const STEP_LABELS = Object.freeze({
   layer: 'Turning on layer',
   refresh: 'Loading aircraft',
   nearest: 'Picking nearest',
+  draw: 'Drawing outline',
+  catalog: 'Searching imagery catalog',
+  drape: 'Loading imagery',
+  osm: 'Searching OpenStreetMap',
 });
 
 /** On-screen label for a progress step. */
@@ -529,6 +547,16 @@ export function progressLine(step, label) {
       return place ? `Finding ${place} on the map.` : 'Finding those places.';
     case 'search':
       return place ? `Looking up ${place}.` : null;
+    case 'draw':
+      return place ? `Outlining ${place}.` : null;
+    case 'catalog':
+      return 'Searching the imagery catalog.';
+    case 'drape':
+      return 'Loading the image.';
+    case 'osm':
+      return place
+        ? `Searching OpenStreetMap for ${place}.`
+        : 'Searching OpenStreetMap.';
     case 'fly':
       return place ? `Heading to ${place}.` : null;
     case 'layer':

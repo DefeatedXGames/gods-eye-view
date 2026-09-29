@@ -28,9 +28,11 @@ test('the complete Realtime tool payload pins the manifest-generated layer relea
   assert.equal(
     digest,
     // Re-derived for the voice layer manifest (generated layer enums and
-    // aliases), point-and-ask (pointer sentinels, referent args) and the
-    // consolidated tool wording (each policy stated once).
-    '087cb623adb90f0f6203aecd6f33345bc4e5616c66ca4f4c55afdba7ff25c8bf',
+    // aliases), point-and-ask (pointer sentinels, referent args), the
+    // consolidated tool wording (each policy stated once), then voice
+    // geometry (resolve_area, find_imagery, osm_query, analyst area scopes
+    // and the osm-places layer).
+    'd660bd7ef8a1562b9553527dbd1c709b0b9a9be6b27af4f1d5aa96fd645bc5a2',
   );
 });
 
@@ -88,7 +90,14 @@ test('metadata cannot add tools, fields, types or enum values', () => {
 
 test('all legacy action arguments are byte-identical after removing the deliberate additions', () => {
   const legacy = structuredClone(GEV_ACTION_SCHEMAS).filter(
-    (tool) => !['next_satellite_pass', 'set_cyber_sonar'].includes(tool.name),
+    (tool) =>
+      ![
+        'next_satellite_pass',
+        'set_cyber_sonar',
+        'resolve_area',
+        'find_imagery',
+        'osm_query',
+      ].includes(tool.name),
   );
   // Layer enums are generated from the voice layer manifest and pinned by
   // layerManifest.test.mjs; the two shipped right-rail panels are additive.
@@ -115,6 +124,13 @@ test('all legacy action arguments are byte-identical after removing the delibera
   analystScopeKind.enum = analystScopeKind.enum.filter(
     (key) => key !== 'pointer',
   );
+  // Area handles add three scope kinds and their two identifiers.
+  const scope = property('analyst_query').scope;
+  scope.properties.kind.enum = scope.properties.kind.enum.filter(
+    (kind) => !['area', 'drawn', 'annotation'].includes(kind),
+  );
+  delete scope.properties.areaId;
+  delete scope.properties.id;
   // The analyst centre now requires a real coordinate.
   const center = property('analyst_query').scope.properties.center;
   delete center.required;

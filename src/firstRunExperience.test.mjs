@@ -661,20 +661,23 @@ test('the voice TOOL SCHEMA matches the pinned release — the mission mapping i
   // Canonical serialization pins every tool name, description, property and
   // ordering while allowing source formatting. Derived from the unchanged
   // release schema before formatting (the previous source-byte pin passed).
-  const legacyTools = structuredClone(GEV_REALTIME_TOOLS).filter((tool) => tool.name !== 'set_cyber_sonar');
+  const legacyTools = structuredClone(GEV_REALTIME_TOOLS).filter(
+    (tool) => !['set_cyber_sonar', 'resolve_area', 'find_imagery', 'osm_query'].includes(tool.name),
+  );
   const hudLayout = legacyTools.find((tool) => tool.name === 'set_hud').parameters.properties.layout;
   assert.deepEqual(hudLayout.enum, ['tactical', 'operator', 'minimal', 'cyber']);
   // Cyber deliberately adds one layout; first-run missions still change no tools.
   hudLayout.enum = hudLayout.enum.filter((layout) => layout !== 'cyber');
   const block = JSON.stringify(legacyTools);
   // Re-derived for the voice layer manifest (generated layer enums, alias and
-  // field hints), point-and-ask's pointer/referent arguments and the prompt
-  // consolidation (shorter analyst, annotate_map and ISS wording); the
-  // missions still ride existing tools.
-  assert.equal(block.length, 28800, 'serialized tool schema length drifted');
+  // field hints), point-and-ask's pointer/referent arguments, the prompt
+  // consolidation (shorter analyst, annotate_map and ISS wording), then the
+  // analyst area scopes and the osm-places layer; the missions still ride
+  // existing tools.
+  assert.equal(block.length, 29104, 'serialized tool schema length drifted');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '7e346dadcc6e6b520c77a5c8cae501c9ee9a2b6e6c61babbe1b0f564cd396db3',
+    'f2893ac3cf404878991bd9255e624ec8a2a9e46e9a0d27530c4f6bf01b2bc626',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
   const instructions = fs.readFileSync(new URL('../server/providers/openai/instructions.js', import.meta.url), 'utf8');

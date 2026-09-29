@@ -115,6 +115,7 @@ async function fetchOverpassPayload(
     readBody = readResponseTextCapped,
     simplify = simplifyOverpassPayloadBody,
     now = Date.now,
+    timeoutMs = OVERPASS_TIMEOUT_MS,
   } = {},
 ) {
   if (!endpoints.length) return overpassNotConfigured();
@@ -126,7 +127,7 @@ async function fetchOverpassPayload(
       continue;
     }
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const requestUrl = new URL(endpoint);
       const authorization =

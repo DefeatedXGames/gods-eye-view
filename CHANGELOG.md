@@ -206,6 +206,27 @@
   (`src/ui/imagerySplit.js`, `src/maps/imageryComparison.js`), and
   `MapSourceController.subscribe()` reports every settled map switch.
 
+## Unreleased — voice geometry
+
+- `resolve_area` turns a named place into a reusable area and can outline
+  it. It uses the same outline sources as voice outlines: bundled Natural
+  Earth regions, countries, states and counties, US Census places and
+  neighborhoods, then the guarded Nominatim outline, then Overpass only when
+  `OVERPASS_UPSTREAMS` is set. Every part and hole is kept. A name several
+  countries or states share ("Georgia", "Punjab") is asked about unless the
+  view is inside one of them.
+- "Draw an area around <landmark>" outlines the mapped area enclosing it,
+  or a 250 m buffer marked approximate.
+- `analyst_query` counts inside an area (`area`), the area you drew
+  (`drawn`) or an outline on the map (`annotation`); region counts include
+  every part and leave out holes.
+- `find_imagery` shows the best recent acquisition for an area, the view or
+  the spot under the pointer through the Recent Imagery panel, and stops if
+  you change the panel while it searches.
+- `osm_query` ("hospitals in Kathmandu") lists places of one kind into a
+  session-only OSM Places layer. It is offered only when
+  `OVERPASS_UPSTREAMS` is set; public Nominatim is never used for it.
+
 ## Unreleased — voice reaches every layer; honest analyst answers
 
 - Voice can switch on every shipped data layer (the two scene-driven

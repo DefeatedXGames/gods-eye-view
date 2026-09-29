@@ -558,6 +558,7 @@ export function createAnnotationResolver({
             buildingHeight: null,
             synthesized: false,
             naturalRegion: ne.name,
+            outlineSource: 'natural-earth',
             lat: neCentroid?.lat ?? lat,
             lon: neCentroid?.lon ?? lon,
             height: sampleGroundHeight(
@@ -1045,6 +1046,7 @@ export function createAnnotationResolver({
       buildingHeight: null,
       synthesized: false,
       adminArea: admin.name,
+      outlineSource: admin.source,
       lat,
       lon,
       height: sampleGroundHeight(viewer, lon, lat),
@@ -1095,6 +1097,7 @@ export function createAnnotationResolver({
       buildingHeight: null,
       label: admin.name,
       source: 'bundled',
+      outlineSource: admin.source,
       synthesized: false,
       outlineUnavailable: false,
       viewport: {
