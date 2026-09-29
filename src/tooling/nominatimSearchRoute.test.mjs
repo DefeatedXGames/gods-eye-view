@@ -15,9 +15,14 @@ import {
   NOMINATIM_MAX_PENDING,
 } from '../../server/providers/regional/place.js';
 import { fetchRegionalJson } from '../../server/providers/regional/http.js';
+import { setSharedNominatimGate } from '../../server/providers/regional/nominatimGate.js';
 import { localProviderPlugins } from '../../server/providers/local.js';
 import { createPlaceSearch, createGoogleGeocoder } from '../search/index.js';
 import { createPhotonGeocoder } from '../keylessGeocoder.js';
+
+// Each case starts with a fresh shared gate: a pause after one case's
+// simulated outage must not decide the next case.
+test.beforeEach(() => setSharedNominatimGate(null));
 
 const HIT = [
   {

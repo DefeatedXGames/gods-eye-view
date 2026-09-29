@@ -165,14 +165,17 @@ export function polygonsContain(polygons, lat, lon) {
 /**
  * A unit's geometry, decoded on first use. Longitudes are unwrapped around
  * the largest part for the box so units cut at the antimeridian (Alaska,
- * Chukotka) get a box on the right side of the globe.
+ * Chukotka) get a box on the right side of the globe. An entry from another
+ * encoding supplies `decode()` returning the same `[outer, ...holes][]`.
  */
-function geometryOf(entry) {
+export function geometryOf(entry) {
   if (entry.geometry) return entry.geometry;
   const decimals = entry.feature.d ?? entry.decimals;
-  const polygons = entry.feature.polygons.map((poly) =>
-    poly.map((ring) => decodeRing(ring, decimals)),
-  );
+  const polygons = entry.decode
+    ? entry.decode()
+    : entry.feature.polygons.map((poly) =>
+        poly.map((ring) => decodeRing(ring, decimals)),
+      );
   const ref = polygons[0]?.[0]?.[0]?.[0] ?? 0;
   let west = Infinity;
   let south = Infinity;
@@ -190,7 +193,7 @@ function geometryOf(entry) {
       if (lat > north) north = lat;
     }
   }
-  const label = entry.feature.label
+  const label = Array.isArray(entry.feature.label)
     ? { lon: entry.feature.label[0], lat: entry.feature.label[1] }
     : ringCentroid(polygons[0][0]);
   entry.geometry = {
@@ -220,7 +223,7 @@ function ringCentroid(ring) {
 }
 
 /** Km from a point to a unit's box (0 inside it). */
-function boxDistanceKm(bbox, lat, lon) {
+export function boxDistanceKm(bbox, lat, lon) {
   const [west, south, east, north] = bbox;
   const mid = (west + east) / 2;
   const x = lon - 360 * Math.round((lon - mid) / 360);
@@ -523,7 +526,7 @@ function qualifierMatches(entry, qualifier) {
  * Rank candidates: a unit containing `near` first, then the match tier,
  * then distance from `near`, then larger area. Returns the ranked list.
  */
-function rank(candidates, near) {
+export function rank(candidates, near) {
   const hasNear = Number.isFinite(near?.lat) && Number.isFinite(near?.lon);
   const scored = candidates.map(({ entry, tier }) => {
     const geometry = geometryOf(entry);

@@ -270,7 +270,9 @@ export function createAnnotationEngine({
         results: [],
         error: 'destroyed',
       };
-    const list = Array.isArray(requests) ? requests : [requests];
+    const list = (Array.isArray(requests) ? requests : [requests]).map(
+      promoteStreetHighlight,
+    );
     if (opts.clearPrevious) clear(); // bumps generation + aborts older pending work
 
     const persist = opts.persist !== false;
@@ -718,7 +720,7 @@ export function createAnnotationEngine({
             continue;
           if ((other.footprintKind || null) !== (anno.footprintKind || null))
             continue;
-          if (!ringsEqual(other.ring, anno.ring)) continue;
+          if (!outlinesEqual(other, anno)) continue;
           annotations.delete(other.id);
           renderer.remove(other);
         }
@@ -802,7 +804,6 @@ export function createAnnotationEngine({
     // FULL per-vertex geometry comparison (the live cap is only 120 and this runs solely for
     // candidates that already matched type+label+anchor, so it's cheap) — so two DIFFERENT
     // same-length rings/paths at the same anchor are never falsely merged.
-    const ringSame = ringsEqual;
     const pathSame = (a, b) => {
       const la = a ? a.length : 0;
       const lb = b ? b.length : 0;
@@ -836,7 +837,7 @@ export function createAnnotationEngine({
           if (Boolean(ex.synthesized) !== Boolean(anno.synthesized)) continue;
           if ((ex.footprintKind || null) !== (anno.footprintKind || null))
             continue;
-          if (!ringSame(ex.ring, anno.ring)) continue;
+          if (!outlinesEqual(ex, anno)) continue;
         }
       } else if (anno.type === 'arrow') {
         if (!near(ex.to, anno.to)) continue;
@@ -1308,6 +1309,49 @@ function ringsEqual(a, b) {
       return false;
   }
   return true;
+}
+
+/**
+ * Whole-outline equality: the main ring AND every part with its holes. Two
+ * outlines sharing an outer ring but differing in parts or holes are two marks.
+ */
+function outlinesEqual(a, b) {
+  if (!ringsEqual(a?.ring, b?.ring)) return false;
+  const parts = (anno) =>
+    Array.isArray(anno?.polygons) && anno.polygons.length
+      ? anno.polygons
+      : [[anno?.ring || []]];
+  const pa = parts(a);
+  const pb = parts(b);
+  if (pa.length !== pb.length) return false;
+  for (let i = 0; i < pa.length; i++) {
+    if (pa[i].length !== pb[i].length) return false;
+    for (let j = 0; j < pa[i].length; j++)
+      if (!ringsEqual(pa[i][j], pb[i][j])) return false;
+  }
+  return true;
+}
+
+const STREET_WORD_RE =
+  /\b(?:street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|highway|hwy|parkway|pkwy|alley)\.?$/i;
+
+/**
+ * "Highlight Congress Avenue" asks for the street, not a dot. A highlight
+ * whose entity is a street (by entityKind or by its name) becomes an area
+ * ask, so it resolves the street outline like any other area, unless the
+ * caller explicitly turned the footprint off.
+ */
+export function promoteStreetHighlight(spec) {
+  if (!spec || typeof spec !== 'object' || spec.footprint === false)
+    return spec;
+  if (normalizeType(spec.type) !== 'highlight') return spec;
+  if (spec.entityKind && spec.entityKind !== 'street') return spec;
+  const target = String(spec.target || '').split(',')[0];
+  const street =
+    spec.entityKind === 'street' || STREET_WORD_RE.test(target.trim());
+  return street && target.trim()
+    ? { ...spec, type: 'area', entityKind: 'street' }
+    : spec;
 }
 
 // --- helpers ----------------------------------------------------------------
